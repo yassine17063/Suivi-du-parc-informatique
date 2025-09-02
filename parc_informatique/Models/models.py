@@ -1,136 +1,116 @@
 
 import sqlite3
 
-DB_PATH = 'parc_informatique.db'
+DB_PATH = "parc_informatique.db"
 
-def add_employee(name, department):
+def _get_conn():
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO employees (name, department) VALUES (?, ?)", (name, department))
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+# ------------ Employees ------------
+
+def add_employee(emp_id, name, department):
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO employees (id, name, department) VALUES (?, ?, ?)",
+        (emp_id, name, department)
+    )
     conn.commit()
     conn.close()
-    print(f"Employé {name} ajouté.")
+
+
+def list_employees(return_data=False):
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT id, name, department FROM employees ORDER BY id")
+    rows = cur.fetchall()
+    conn.close()
+    if return_data:
+        return rows
+    if rows:
+        for r in rows:
+            print(f"ID: {r[0]} | Nom: {r[1]} | Département: {r[2]}")
+    else:
+        print("Aucun employé.")
+
 def delete_employee(employee_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM employees WHERE id = ?", (employee_id,))
+    conn.commit()
+    conn.close()
 
-    try:
-        cursor.execute("DELETE FROM employees WHERE id = ?", (employee_id,))
-        conn.commit()
-        if cursor.rowcount > 0:
-            print("Employé supprimé avec succès.")
-        else:
-            print("Aucun employé trouvé avec cet ID.")
-    finally:
-        conn.close()
 def modify_employee_department(employee_id, new_department):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(
-            "UPDATE employees SET department = ? WHERE id = ?",
-            (new_department, employee_id)
-        )
-        conn.commit()
-        if cursor.rowcount > 0:
-            print(" Département mis à jour avec succès.")
-        else:
-            print(" Aucun employé trouvé avec cet ID.")
-    finally:
-        conn.close()
-
-def list_employees():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM employees")
-    employees = cursor.fetchall()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("UPDATE employees SET department = ? WHERE id = ?", (new_department, employee_id))
+    conn.commit()
     conn.close()
-    for emp in employees:
-        print(emp)
-def add_maintenance(device_id, date, description):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
 
-    try:
-        cursor.execute('''
-            INSERT INTO maintenance (device_id, date, description)
-            VALUES (?, ?, ?)
-        ''', (device_id, date, description))
-        conn.commit()
-        print("Maintenance enregistrée avec succès.")
-    except sqlite3.IntegrityError:
-        print("Erreur : l'ID de l'appareil n'existe pas.")
-    finally:
-        conn.close()
+# ------------ Devices ------------
+
 def add_device(device_type, brand, serial_number, employee_id=None):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO devices (type, brand, serial_number, employee_id) VALUES (?, ?, ?, ?)",
+        (device_type, brand, serial_number, employee_id),
+    )
+    conn.commit()
+    conn.close()
 
-    try:
-        cursor.execute('''
-            INSERT INTO devices (type, brand, serial_number, employee_id)
-            VALUES (?, ?, ?, ?)
-        ''', (device_type, brand, serial_number, employee_id))
-        conn.commit()
-        print("Appareil ajouté avec succès.")
-    except sqlite3.IntegrityError:
-        print("Erreur : numéro de série déjà utilisé ou ID employé invalide.")
-    finally:
-        conn.close()
+def list_devices(return_data=False):
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, type, brand, serial_number, employee_id FROM devices ORDER BY id"
+    )
+    rows = cur.fetchall()
+    conn.close()
+    if return_data:
+        return rows
+    if rows:
+        for d in rows:
+            print(
+                f"ID: {d[0]} | Type: {d[1]} | Marque: {d[2]} | N° Série: {d[3]} | Employé ID: {d[4] if d[4] is not None else '—'}"
+            )
+    else:
+        print("Aucun appareil.")
+
 def delete_device(device_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("DELETE FROM devices WHERE id = ?", (device_id,))
-        conn.commit()
-        if cursor.rowcount > 0:
-            print(" Appareil supprimé avec succès.")
-        else:
-            print(" Aucun appareil trouvé avec cet ID.")
-    finally:
-        conn.close()
-
-def list_devices():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT d.id, d.type, d.brand, d.serial_number, e.name
-        FROM devices d
-        LEFT JOIN employees e ON d.employee_id = e.id
-    ''')
-
-    devices = cursor.fetchall()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM devices WHERE id = ?", (device_id,))
+    conn.commit()
     conn.close()
 
-    if devices:
-        print("\n📋 Liste des appareils :")
-        for d in devices:
-            device_id, type_, brand, serial, employee = d
-            print(f"ID: {device_id} | Type: {type_} | Marque: {brand} | "
-                  f"Série: {serial} | Employé: {employee if employee else 'Non affecté'}")
-    else:
-        print(" Aucun appareil trouvé.")
-def list_maintenance_by_device(device_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+# ------------ Maintenance ------------
 
-    cursor.execute('''
-        SELECT m.id, m.date, m.description
-        FROM maintenance m
-        WHERE m.device_id = ?
-        ORDER BY m.date DESC
-    ''', (device_id,))
-
-    maintenances = cursor.fetchall()
+def add_maintenance(device_id, date, description):
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO maintenance (device_id, date, description) VALUES (?, ?, ?)",
+        (device_id, date, description),
+    )
+    conn.commit()
     conn.close()
 
-    if maintenances:
-        print(f"\n Historique des maintenances pour l'appareil ID {device_id} :")
-        for m in maintenances:
-            maint_id, date, description = m
-            print(f"- ID: {maint_id} | Date: {date} | Description: {description}")
+def list_maintenance_by_device(device_id, return_data=False):
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, device_id, date, description FROM maintenance WHERE device_id = ? ORDER BY date DESC, id DESC",
+        (device_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    if return_data:
+        return rows
+    if rows:
+        for m in rows:
+            print(f"ID: {m[0]} | Appareil: {m[1]} | Date: {m[2]} | {m[3] or ''}")
     else:
-        print(f" Aucune maintenance trouvée pour l'appareil ID {device_id}.")
+        print("Aucune maintenance pour cet appareil.")

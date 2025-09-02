@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🛠️ Maintenance</h2>
+
+<h3>Ajouter une maintenance</h3>
+<form method="post" action="{{ url_for('add_maintenance_route') }}">
+  Appareil:
+  <select name="device_id" required>
+    {% for d in devices %}
+      <option value="{{ d[0] }}">ID {{ d[0] }} - {{ d[1] }} ({{ d[2] }})</option>
+    {% endfor %}
+  </select>
+  <br>
+  Date: <input type="date" name="date" required>
+  <br>
+  Description: <input type="text" name="description">
+  <br>
+  <button type="submit">Ajouter</button>
+</form>
+
+<h3>Voir maintenance par appareil</h3>
+<ul>
+  {% for d in devices %}
+    <li>
+      <a href="{{ url_for('maintenance_by_device', device_id=d[0]) }}">
+        Appareil ID {{ d[0] }} - {{ d[1] }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}
+

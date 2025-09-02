@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>👨‍💼 Employés</h2>
+
+<h3>Ajouter un employé</h3>
+<form method="post" action="{{ url_for('employees') }}">
+  ID: <input type="number" name="id" required>
+  Nom: <input type="text" name="name" required>
+  Département: <input type="text" name="department" required>
+  <button type="submit">Ajouter</button>
+</form>
+
+<h3>Liste des employés</h3>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Nom</th>
+    <th>Département</th>
+    <th>Actions</th>
+  </tr>
+  {% for e in employees %}
+  <tr>
+    <td>{{ e[0] }}</td>
+    <td>{{ e[1] }}</td>
+    <td>
+      <form method="post" action="{{ url_for('modify_emp', emp_id=e[0]) }}">
+        <input type="text" name="department" value="{{ e[2] }}">
+        <button type="submit">Modifier</button>
+      </form>
+    </td>
+    <td>
+      <a href="{{ url_for('delete_emp', emp_id=e[0]) }}">Supprimer</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
+

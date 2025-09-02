@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🛠️ Maintenance pour appareil {{ device_id }}</h2>
+
+<h3>Historique</h3>
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Description</th>
+  </tr>
+  {% for m in maints %}
+  <tr>
+    <td>{{ m[2] }}</td>
+    <td>{{ m[3] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<p><a href="{{ url_for('maintenance') }}">⬅ Retour</a></p>
+{% endblock %}
+

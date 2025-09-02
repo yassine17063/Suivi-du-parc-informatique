@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>💻 Appareils</h2>
+
+<h3>Ajouter un appareil</h3>
+<form method="post">
+  Type: <input type="text" name="dtype" required>
+  Marque: <input type="text" name="brand" required>
+  N° Série: <input type="text" name="serial" required>
+  ID Employé (optionnel): <input type="number" name="employee_id">
+  <button type="submit">Ajouter</button>
+</form>
+
+<h3>Liste des appareils</h3>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Type</th>
+    <th>Marque</th>
+    <th>N° Série</th>
+    <th>Employé ID</th>
+    <th>Actions</th>
+  </tr>
+  {% for d in devices %}
+  <tr>
+    <td>{{ d[0] }}</td>
+    <td>{{ d[1] }}</td>
+    <td>{{ d[2] }}</td>
+    <td>{{ d[3] }}</td>
+    <td>{{ d[4] }}</td>
+    <td>
+      <a href="{{ url_for('delete_dev', dev_id=d[0]) }}">Supprimer</a> |
+      <a href="{{ url_for('maintenance', device_id=d[0]) }}">Maintenances</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
